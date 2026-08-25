@@ -6,71 +6,129 @@ Uma aplicação full-stack moderna para consulta meteorológica em tempo real, c
 
 ## 🚀 Links em Produção
 
-- **Aplicação Web (Vercel):** [https://seu-projeto.vercel.app](https://seu-projeto.vercel.app)
-- **Documentação da API / Swagger (Render):** [https://seu-backend.onrender.com/api/docs](https://seu-backend.onrender.com/api/docs)
+* **Aplicação Web (Vercel):** [https://seu-projeto.vercel.app](https://seu-projeto.vercel.app)
+* **Documentação da API / Swagger (Render):** [https://seu-backend.onrender.com/api/docs](https://seu-backend.onrender.com/api/docs)
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
 ### Frontend
-- **React 19** com **TypeScript** e **Vite**
-- **Tailwind CSS v4** (Estilização utilitária moderna)
-- **Lucide React** (Ícones climáticos e de navegação)
-- **Context API** (Gerenciamento global de unidades: °C / °F)
-- **HTML5 Geolocation API** & **LocalStorage** (Persistência do histórico de buscas)
+* **React 19** com **TypeScript** e **Vite**
+* **Tailwind CSS v4** (Estilização moderna e responsiva)
+* **Lucide React** (Ícones de condições climáticas)
+* **Context API** (Gerenciamento global de unidades: °C / °F)
+* **HTML5 Geolocation API** & **LocalStorage** (Persistência do histórico recente)
 
 ### Backend (BFF)
-- **Node.js** com **Express** e **TypeScript**
-- **Open-Meteo API** (Geocodificação e dados climáticos)
-- **Node-Cache** (Cache em memória com TTL de 10 minutos para otimização de requisições)
-- **Swagger UI & OpenAPI 3.0** (Documentação interativa dos endpoints)
+* **Node.js** com **Express** e **TypeScript**
+* **Open-Meteo API** (Geocodificação e dados meteorológicos sem necessidade de API key)
+* **Node-Cache** (Cache em memória com TTL de 10 minutos para otimizar consumo e latência)
+* **Swagger UI & OpenAPI 3.0** (Documentação interativa das rotas da API)
 
 ### Qualidade & DevOps
-- **Vitest & Supertest** (Testes unitários e testes de integração HTTP)
-- **GitHub Actions** (Pipeline de CI automatizado para testes e builds paralelos)
-- **Docker & Docker Compose** (Multi-stage builds com Nginx Alpine e Node Alpine)
+* **Vitest & Supertest** (Testes unitários e de integração HTTP)
+* **GitHub Actions** (Pipeline de CI automatizado com jobs paralelos)
+* **Docker & Docker Compose** (Multi-stage builds com Nginx Alpine e Node Alpine)
 
 ---
 
 ## 🏛️ Arquitetura do Sistema
 
-```text
-[ React Frontend (Vercel / Nginx) ]
-                │
-         (HTTP / REST)
-                ▼
-[ Express BFF (Render / Node.js) ] ── (Hit) ──> [ Memory Cache (10m) ]
-                │ (Miss)
-                ▼
-      [ Open-Meteo API ]
+```
+┌────────────────────────────────────────────────────────┐
+│               Frontend (React + Vite)                  │
+│  - Tailwind CSS v4          - Context API (°C / °F)    │
+│  - Geolocation API          - LocalStorage History     │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+                     (HTTP / REST)
+                           │
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│            Backend BFF (Express + TypeScript)          │
+│  - Validação de Parâmetros  - Documentação Swagger UI  │
+└──────────────┬───────────────────────────┬─────────────┘
+               │ (Cache Miss)              │ (Cache Hit)
+               ▼                           ▼
+┌──────────────────────────────┐   ┌─────────────────────┐
+│    Open-Meteo REST API       │   │  Node-Cache (Mem)   │
+│  - Geocoding & Weather Data  │   │  - TTL: 10 minutos  │
+└──────────────────────────────┘   └─────────────────────┘
+```
 
-💻 Como Rodar o Projeto Localmente
-Opção 1: Via Docker Compose (Recomendado)
-Certifique-se de ter o Docker instalado e execute na raiz:
+---
 
-# Sobe o Frontend (porta 80) e o Backend (porta 3333)
-docker compose up --build
+## 💻 Como Rodar o Projeto Localmente
 
-Acesse o Frontend em: http://localhost
+### Pré-requisitos
+* [Node.js](https://nodejs.org/) (versão 20 ou superior)
+* [Git](https://git-scm.com/)
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) *(opcional, se optar por rodar em contêineres)*
 
-Acesse a API / Swagger em: http://localhost:3333/api/docs
+---
 
-Opção 2: Manualmente
-1. Backend:
+### Opção 1: Execução com Docker Compose (Recomendado)
 
+Esta opção inicializa o Frontend e o Backend simultaneamente em contêineres isolados com um único comando:
+
+1. **Clone o repositório:**
+   ```bash
+   git clone [https://github.com/LSCAlbion/ClimaApp.git](https://github.com/LSCAlbion/ClimaApp.git)
+   cd ClimaApp
+   ```
+
+2. **Suba os contêineres:**
+   ```bash
+   docker compose up --build
+   ```
+
+3. **Acesse as aplicações:**
+   * **Frontend:** `http://localhost`
+   * **Backend / Swagger:** `http://localhost:3333/api/docs`
+   * **Health Check:** `http://localhost:3333/health`
+
+---
+
+### Opção 2: Execução Manual (Sem Docker)
+
+Abra dois terminais separados para rodar os serviços:
+
+#### Terminal 1 — Backend (BFF):
+```bash
 cd weather-backend
 npm install
 npm run dev
+```
+> O backend iniciará em `http://localhost:3333`
 
-2. Frontend:
-
+#### Terminal 2 — Frontend:
+```bash
 cd weather-frontend
 npm install
 npm run dev
+```
+> O frontend iniciará em `http://localhost:5173`
 
-🧪 Executando os Testes
-Para rodar a suíte de testes unitários e de integração no backend:
+---
 
+## 🧪 Executando os Testes Automatizados
+
+Os testes cobrem a camada de serviços (regras de negócio e cache) e as rotas HTTP do controller:
+
+```bash
 cd weather-backend
 npm test
+```
+
+Para rodar em modo contínuo (*watch*):
+```bash
+cd weather-backend
+npm run test:watch
+```
+
+---
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Consulte o arquivo `LICENSE` para mais detalhes.
