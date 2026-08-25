@@ -6,8 +6,8 @@ Uma aplicação full-stack moderna para consulta meteorológica em tempo real, c
 
 ## 🚀 Links em Produção
 
-* **Aplicação Web (Vercel):** [https://seu-projeto.vercel.app](https://seu-projeto.vercel.app)
-* **Documentação da API / Swagger (Render):** [https://seu-backend.onrender.com/api/docs](https://seu-backend.onrender.com/api/docs)
+* **Aplicação Web (Vercel):** [https://clima-app-ruby-delta.vercel.app/](https://clima-app-ruby-delta.vercel.app/)
+* **Documentação da API / Swagger (Render):** [https://climaapp-5es2.onrender.com](https://climaapp-5es2.onrender.com)
 
 ---
 
