@@ -1,0 +1,22 @@
+# Dependências
+node_modules/
+
+# Builds e saídas
+dist/
+build/
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Sistema e IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

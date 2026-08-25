@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: ./weather-backend
+      dockerfile: Dockerfile
+    container_name: weather-bff
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      - PORT=3333
+      - NODE_ENV=production
+    networks:
+      - weather-network
+
+  frontend:
+    build:
+      context: ./weather-frontend
+      dockerfile: Dockerfile
+    container_name: weather-ui
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - weather-network
+
+networks:
+  weather-network:
+    driver: bridge
