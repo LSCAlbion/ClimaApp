@@ -6,8 +6,12 @@ import { weatherCache } from '../config/cache.js';
 const GEOCODING_API = 'https://geocoding-api.open-meteo.com/v1/search';
 const FORECAST_API = 'https://api.open-meteo.com/v1/forecast';
 
+const HTTP_HEADERS = {
+  'User-Agent': 'ClimaApp-BFF/1.0 (https://github.com/LSCAlbion/ClimaApp)',
+  'Accept-Encoding': 'gzip,deflate,compress',
+};
+
 function transformForecastData(hourly: any, daily: any): { hourly: HourlyForecast[]; daily: DailyForecast[] } {
-  
   const currentHourIndex = hourly.time.findIndex((t: string) => {
     const itemDate = new Date(t);
     const now = new Date();
@@ -67,14 +71,23 @@ export async function getWeatherData(cityName: string): Promise<WeatherData> {
 
   console.log(`🌐 [Cache MISS] Consultando Open-Meteo para cidade: "${cityName}"`);
 
-  const geoResponse = await axios.get<GeocodingResponse>(GEOCODING_API, {
-    params: {
-      name: cityName,
-      count: 1,
-      language: 'pt',
-      format: 'json',
-    },
-  });
+  let geoResponse;
+  try {
+    geoResponse = await axios.get<GeocodingResponse>(GEOCODING_API, {
+      headers: HTTP_HEADERS,
+      params: {
+        name: cityName,
+        count: 1,
+        language: 'pt',
+        format: 'json',
+      },
+    });
+  } catch (err: any) {
+    if (err.response?.status === 429) {
+      throw new Error('Limite de requisições excedido na API meteorológica. Tente novamente em instantes.');
+    }
+    throw err;
+  }
 
   const location = geoResponse.data.results?.[0];
 
@@ -84,17 +97,26 @@ export async function getWeatherData(cityName: string): Promise<WeatherData> {
 
   const { latitude, longitude, name: resolvedCity, country_code: country } = location;
 
-  const weatherResponse = await axios.get(FORECAST_API, {
-    params: {
-      latitude,
-      longitude,
-      current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
-      hourly: 'temperature_2m,weather_code',
-      daily: 'weather_code,temperature_2m_max,temperature_2m_min',
-      timezone: 'auto',
-      forecast_days: 6,
-    },
-  });
+  let weatherResponse;
+  try {
+    weatherResponse = await axios.get(FORECAST_API, {
+      headers: HTTP_HEADERS,
+      params: {
+        latitude,
+        longitude,
+        current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
+        hourly: 'temperature_2m,weather_code',
+        daily: 'weather_code,temperature_2m_max,temperature_2m_min',
+        timezone: 'auto',
+        forecast_days: 6,
+      },
+    });
+  } catch (err: any) {
+    if (err.response?.status === 429) {
+      throw new Error('Limite de requisições excedido na API meteorológica. Tente novamente em instantes.');
+    }
+    throw err;
+  }
 
   const { current, hourly, daily } = weatherResponse.data;
   const { hourly: transformedHourly, daily: transformedDaily } = transformForecastData(hourly, daily);
@@ -115,6 +137,7 @@ export async function getWeatherData(cityName: string): Promise<WeatherData> {
   weatherCache.set(cacheKey, weatherResult);
   return weatherResult;
 }
+
 export async function getWeatherDataByCoords(latitude: number, longitude: number): Promise<WeatherData> {
   const roundedLat = latitude.toFixed(2);
   const roundedLon = longitude.toFixed(2);
@@ -128,17 +151,26 @@ export async function getWeatherDataByCoords(latitude: number, longitude: number
 
   console.log(`🌐 [Cache MISS] Consultando Open-Meteo para coordenadas: ${roundedLat}, ${roundedLon}`);
 
-  const weatherResponse = await axios.get(FORECAST_API, {
-    params: {
-      latitude,
-      longitude,
-      current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
-      hourly: 'temperature_2m,weather_code',
-      daily: 'weather_code,temperature_2m_max,temperature_2m_min',
-      timezone: 'auto',
-      forecast_days: 6,
-    },
-  });
+  let weatherResponse;
+  try {
+    weatherResponse = await axios.get(FORECAST_API, {
+      headers: HTTP_HEADERS,
+      params: {
+        latitude,
+        longitude,
+        current: 'temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
+        hourly: 'temperature_2m,weather_code',
+        daily: 'weather_code,temperature_2m_max,temperature_2m_min',
+        timezone: 'auto',
+        forecast_days: 6,
+      },
+    });
+  } catch (err: any) {
+    if (err.response?.status === 429) {
+      throw new Error('Limite de requisições excedido na API meteorológica. Tente novamente em instantes.');
+    }
+    throw err;
+  }
 
   const { current, hourly, daily } = weatherResponse.data;
   const { hourly: transformedHourly, daily: transformedDaily } = transformForecastData(hourly, daily);
